@@ -26,7 +26,7 @@ namespace Dss.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GenerateSASUrl(SASUrlRequest sasUrlRequest)
         {
-            await _kafkaProducer.ProduceAsync(KafkaTopics.SendNewFileToIDM, null, sasUrlRequest);
+            await _kafkaMRMProducer.ProduceAsync(KafkaTopics.SendNewFileToIDM, null, sasUrlRequest);
 
             return Ok("SAS Url generation is in progress");
         }
