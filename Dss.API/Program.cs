@@ -1,4 +1,5 @@
 using Confluent.Kafka;
+using Dss.API.Handlers;
 using Dss.API.kafkaEvents.UserRegistration.Consumers;
 using Dss.API.kafkaEvents.UserRegistration.Handlers;
 using Dss.application.Interfaces;
@@ -12,6 +13,7 @@ using Kafka.Producer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +28,24 @@ builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddTransient<IAzureStorage, AzureStorage>();
 
+// configure the consumer
+builder.Services.Configure<ConsumerConfig>(options =>
+{
+    options.BootstrapServers = builder.Configuration.GetSection("KafkaConsumerConfig:bootstrapservers").Value;
+    options.GroupId = builder.Configuration.GetSection("KafkaConsumerConfig:groupId").Value;
+    options.AutoOffsetReset = AutoOffsetReset.Earliest;
+});
+// Inject the request handler
+builder.Services.AddSingleton<RequestQueryHandler>();
+// Configure the producer
+builder.Services.Configure<ProducerConfig>(options =>
+{
+    options.BootstrapServers = builder.Configuration.GetSection("KafkaProducerConfig:bootstrapservers").Value;
+});
+
+// Inject the request command handler
+builder.Services.AddSingleton<RequestCommandHandler>();
+
 var clientConfig = new ClientConfig()
 {
     BootstrapServers = builder.Configuration["Kafka:ClientConfigs:BootstrapServers"]
@@ -34,7 +54,7 @@ var clientConfig = new ClientConfig()
 var producerConfig = new ProducerConfig(clientConfig);
 var consumerConfig = new ConsumerConfig(clientConfig)
 {
-    GroupId = "DSSAPI",
+    GroupId = "mrm-consumers",
     EnableAutoCommit = true,
     AutoOffsetReset = AutoOffsetReset.Earliest,
     StatisticsIntervalMs = 5000,
@@ -47,9 +67,9 @@ builder.Services.AddSingleton(consumerConfig);
 
 builder.Services.AddSingleton(typeof(IKafkaProducer<,>), typeof(KafkaProducer<,>));
 
-builder.Services.AddScoped<IKafkaHandler<string, RegisterUser>, RegisterUserHandler>();
+//builder.Services.AddScoped<IKafkaHandler<string, RegisterUser>, RegisterUserHandler>();
 builder.Services.AddSingleton(typeof(IKafkaConsumer<,>), typeof(KafkaConsumer<,>));
-builder.Services.AddHostedService<RegisterUserConsumer>();
+//builder.Services.AddHostedService<RegisterUserConsumer>();
 
 
 // Add Serilog
