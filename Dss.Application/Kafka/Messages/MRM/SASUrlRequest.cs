@@ -2,7 +2,8 @@
 {
     public class SASUrlRequest
     { 
-       public string UserName { get; set; }       
-       public bool SasUrl { get; set; }
+        public string UserName { get; set; }
+        public string TopicName { get; set; }
+        public bool SasUrl { get; set; }
     }
 }

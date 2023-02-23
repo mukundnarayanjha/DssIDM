@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="Confluent.Kafka" Version="2.0.2" />
+    <PackageReference Include="MediatR" Version="12.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.14.1" />
@@ -28,6 +29,7 @@
 
   <ItemGroup>
     <Folder Include="Constants\" />
+    <Folder Include="Commands\" />
   </ItemGroup>
 
 </Project>
