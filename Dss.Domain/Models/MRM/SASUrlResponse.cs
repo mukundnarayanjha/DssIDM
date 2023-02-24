@@ -1,4 +1,4 @@
-﻿namespace Dss.Application.Kafka.Messages.MRM
+﻿namespace Dss.Domain.MRM
 {
     public class SASUrlResponse
     {  

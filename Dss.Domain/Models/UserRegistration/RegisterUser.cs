@@ -1,4 +1,4 @@
-﻿namespace Dss.Application.Kafka.Messages.UserRegistration
+﻿namespace Dss.Domain.UserRegistration
 {
     /// <summary>
     ///  Represents the message object in RegisterUser Topic

@@ -1,8 +1,14 @@
-﻿using Dss.Application.Kafka.Messages.UserRegistration;
-using Dss.Application.Kafka.Messages.MRM;
-using Kafka.Constants;
+﻿using Dss.API.AzureBlobStorage.Controllers;
+using Dss.application.Interfaces;
+using Dss.Application.Constants;
+using Dss.Domain.UserRegistration;
+using Dss.Application.Queries;
+using Dss.Domain.DTOs;
+using Dss.Domain.MRM;
 using Kafka.Interfaces;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace Dss.API.Controllers
 {
@@ -12,13 +18,23 @@ namespace Dss.API.Controllers
     {
         private readonly IKafkaProducer<string, RegisterUser> _kafkaProducer;
         private readonly IKafkaProducer<string, SASUrlRequest> _kafkaMRMProducer;
+        private readonly IKafkaProducer<string, SASUrlResponse> _kafkaMRMResponseProducer;
+        private readonly IAzureStorage _storage;
+        private readonly ILogger<StorageController> _logger;
+        private readonly IMediator _mediator;
         public KafkaOperationController(
             IKafkaProducer<string, RegisterUser> kafkaProducer,
-            IKafkaProducer<string, SASUrlRequest> kafkaMRMProducer
+            IKafkaProducer<string, SASUrlRequest> kafkaMRMProducer,
+            IKafkaProducer<string, SASUrlResponse> kafkaMRMResponseProducer,
+            IAzureStorage storage, ILogger<StorageController> logger, IMediator mediator
             )
         {
             _kafkaProducer = kafkaProducer;
             _kafkaMRMProducer = kafkaMRMProducer;
+            _kafkaMRMResponseProducer = kafkaMRMResponseProducer;
+            _storage = storage;
+            _logger = logger;
+            _mediator = mediator;
         }
 
         [HttpPost]
@@ -28,8 +44,21 @@ namespace Dss.API.Controllers
         {
             await _kafkaMRMProducer.ProduceAsync(KafkaTopics.SendNewFileToIDM, null, sasUrlRequest);
 
-            return Ok("SAS Url generation is in progress");
+            // Get all files at the Azure Storage Location and return them
+            Uri sasUrl = await _storage.GetServiceSasUriForContainer();
+            SASUrlResponse sASUrlResponse = new()
+            {
+                SasUrl = sasUrl,
+                UserName= sasUrlRequest.UserName
+            };
+            await _kafkaMRMResponseProducer.ProduceAsync(KafkaTopics.SASUrlResponse, null, sASUrlResponse);
+
+            var sasUrlDetails = await _mediator.Send(new GenerateSASUrlQuery());
+
+            return Ok(sasUrlDetails);
         }
+
+
 
         [HttpPost]
         [Route("Register")]
@@ -40,5 +69,6 @@ namespace Dss.API.Controllers
 
             return Ok("User Registration In Progress");
         }
+
     }
 }

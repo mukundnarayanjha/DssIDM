@@ -1,5 +1,5 @@
-﻿using Dss.Application.Kafka.Messages.UserRegistration;
-using Kafka.Constants;
+﻿using Dss.Application.Constants;
+using Dss.Domain.UserRegistration;
 using Kafka.Interfaces;
 
 namespace Dss.API.kafkaEvents.UserRegistration.Handlers

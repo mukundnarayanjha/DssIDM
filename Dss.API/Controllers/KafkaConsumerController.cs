@@ -1,5 +1,5 @@
-﻿using Dss.Application.Kafka.Messages.MRM;
-using Kafka.Constants;
+﻿using Dss.Application.Constants;
+using Dss.Domain.MRM;
 using Kafka.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +23,7 @@ namespace dss.api.Controllers
         {
             try
             {
-                CancellationToken stoppingToken = new CancellationToken();
+                CancellationToken stoppingToken = new();
                 await _consumer.Consume(KafkaTopics.SendNewFileToIDM, stoppingToken);
             }
             catch (Exception ex)

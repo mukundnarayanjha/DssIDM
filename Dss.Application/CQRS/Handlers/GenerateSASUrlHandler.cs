@@ -1,22 +1,23 @@
 ﻿using Confluent.Kafka;
-using Dss.Application.Kafka.Messages.MRM;
+using Dss.Domain.MRM;
 using Dss.Application.Queries;
 using MediatR;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Dss.Application.Constants;
 
 namespace Dss.Application.Handlers
 {
-    public class RequestSASHandler : IRequestHandler<RequestSASQuery, SASUrlRequest>
+    public class GenerateSASUrlHandler : IRequestHandler<GenerateSASUrlQuery, SASUrlResponse>
     {
         private readonly IOptions<ConsumerConfig> _configuration;
 
-        public RequestSASHandler(IOptions<ConsumerConfig> configuration)
+        public GenerateSASUrlHandler(IOptions<ConsumerConfig> configuration)
         {
             _configuration = configuration;
         }
 
-        public async Task<SASUrlRequest> Handle(RequestSASQuery request, CancellationToken cancellationToken)
+        public async Task<SASUrlResponse> Handle(GenerateSASUrlQuery request, CancellationToken cancellationToken)
         {
             try
             {
@@ -24,7 +25,7 @@ namespace Dss.Application.Handlers
                 var consumer = new ConsumerBuilder<Null, string>(_configuration.Value).Build();
                 // subscribe to the specified topic
                 //consumer.Subscribe(request.TopicName);
-                consumer.Subscribe("SendNewFileToIDM");
+                consumer.Subscribe(KafkaTopics.SASUrlResponse);
                 // while no data available wait
                 while (true)
                 {
@@ -33,7 +34,7 @@ namespace Dss.Application.Handlers
                     // close & commit
                     consumer.Close();
                     // return result
-                    var result = JsonConvert.DeserializeObject<SASUrlRequest>(cr.Message.Value);
+                    var result = JsonConvert.DeserializeObject<SASUrlResponse>(cr.Message.Value);
                     return await Task.FromResult(result);                    
                 }
             }

@@ -28,8 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Constants\" />
-    <Folder Include="Commands\" />
+    <Folder Include="CQRS\Commands\" />
   </ItemGroup>
 
 </Project>
