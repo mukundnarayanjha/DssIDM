@@ -41,7 +41,7 @@ namespace Dss.API.Controllers
         /// </summary>
         /// <param name="request">holds the name of target topic </param>
         /// <returns> consumed message from topic</returns>
-        [HttpPost]
+        [HttpPost(nameof(ConsumeWithMediator))]
         public async Task<IActionResult> ConsumeWithMediator(RequestQuery request)
         {
             try
