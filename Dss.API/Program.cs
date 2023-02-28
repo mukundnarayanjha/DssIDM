@@ -16,6 +16,9 @@ using Serilog;
 using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
 using Dss.Application.Extensions;
+using Dss.Domain.Models.MRM;
+using Dss.API.kafkaEvents.UserRegistration.Handlers;
+using Dss.API.kafkaEvents.UserRegistration.Consumers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,24 +51,32 @@ builder.Services.Configure<ConsumerConfig>(options =>
 });
 // Inject the request handler
 builder.Services.AddSingleton<RequestQueryHandler>();
+// Inject the request command handler
+builder.Services.AddSingleton<RequestCommandHandler>();
+
+
 // Configure the producer
 builder.Services.Configure<ProducerConfig>(options =>
 {
     options.BootstrapServers = builder.Configuration.GetSection("KafkaProducerConfig:bootstrapservers").Value;
+    //options.SaslUsername = builder.Configuration.GetSection("KafkaProducerConfig:SaslUsername").Value;
+    //options.SaslPassword = builder.Configuration.GetSection("KafkaProducerConfig:SaslPassword").Value;
+    //options.SecurityProtocol = builder.Configuration.GetSection("KafkaProducerConfig:SecurityProtocol").Value;  
 });
-
-// Inject the request command handler
-builder.Services.AddSingleton<RequestCommandHandler>();
 
 var clientConfig = new ClientConfig()
 {
-    BootstrapServers = builder.Configuration["Kafka:ClientConfigs:BootstrapServers"]
+    BootstrapServers = builder.Configuration["KafkaProducerConfig:bootstrapservers"],
+    SaslUsername = builder.Configuration["KafkaProducerConfig:SaslUsername"],
+    SaslPassword = builder.Configuration["KafkaProducerConfig:SaslPassword"],
+    SecurityProtocol = SecurityProtocol.SaslSsl,
+    SaslMechanism = SaslMechanism.Plain
 };
 
 var producerConfig = new ProducerConfig(clientConfig);
 var consumerConfig = new ConsumerConfig(clientConfig)
 {
-    GroupId = "mrm-consumers",
+    GroupId = Guid.NewGuid().ToString(),
     EnableAutoCommit = true,
     AutoOffsetReset = AutoOffsetReset.Earliest,
     StatisticsIntervalMs = 5000,
@@ -74,12 +85,12 @@ var consumerConfig = new ConsumerConfig(clientConfig)
 
 builder.Services.AddSingleton(producerConfig);
 builder.Services.AddSingleton(consumerConfig);
-
-
 builder.Services.AddSingleton(typeof(IKafkaProducer<,>), typeof(KafkaProducer<,>));
 
 //builder.Services.AddScoped<IKafkaHandler<string, RegisterUser>, RegisterUserHandler>();
+builder.Services.AddScoped<IKafkaHandler<string, AddDocument>, AddDocumentHandler>();
 builder.Services.AddSingleton(typeof(IKafkaConsumer<,>), typeof(KafkaConsumer<,>));
+builder.Services.AddHostedService<AddDocumentConsumer>();
 //builder.Services.AddHostedService<RegisterUserConsumer>();
 
 

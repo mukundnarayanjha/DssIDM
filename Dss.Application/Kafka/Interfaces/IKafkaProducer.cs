@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using Confluent.Kafka;
+using System.Threading.Tasks;
 
 namespace Kafka.Interfaces
 {
@@ -17,5 +18,14 @@ namespace Kafka.Interfaces
         /// <param name="value">Indicates message's value in Kafka topic</param>
         /// <returns></returns>
         Task ProduceAsync(string topic,TKey key, TValue value);
+
+        /// <summary>
+        ///  Triggered when the service is ready to produce the Kafka topic.
+        /// </summary>
+        /// <param name="topicPartition">Indicates topic partition</param>
+        /// <param name="key">Indicates message's key in Kafka topic</param>
+        /// <param name="value">Indicates message's value in Kafka topic</param>
+        /// <returns></returns>
+        Task ProduceAsync(TopicPartition topicPartition, TKey key, TValue value);
     }
 }

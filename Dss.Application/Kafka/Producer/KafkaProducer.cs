@@ -30,10 +30,30 @@ namespace Kafka.Producer
         /// <param name="key">Indicates message's key in Kafka topic</param>
         /// <param name="value">Indicates message's value in Kafka topic</param>
         /// <returns></returns>
-        public async Task ProduceAsync(string topic,TKey key, TValue value)
+        public async Task ProduceAsync(string topic, TKey key, TValue value)
         {
-            await _producer.ProduceAsync(topic, new Message<TKey, TValue> { Key = key, Value = value });
+            await _producer.ProduceAsync(topic, new Message<TKey, TValue> { Key = key, Value = value })
+                                    .ContinueWith(task => task.IsFaulted
+                                    ? $"error producing message: {task.Exception.Message}"
+                                    : $"produced to: {task.Result.TopicPartitionOffset}");
+
         }
+
+        /// <summary>
+        /// Triggered when the service creates Kafka topic.
+        /// </summary>
+        /// <param name="topicPartition">Indicates topic Partition</param>
+        /// <param name="key">Indicates message's key in Kafka topic</param>
+        /// <param name="value">Indicates message's value in Kafka topic</param>
+        /// <returns></returns>
+        public async Task ProduceAsync(TopicPartition topicPartition, TKey key, TValue value)
+        {
+            await _producer.ProduceAsync(topicPartition, new Message<TKey, TValue> { Key = key, Value = value })
+                                    .ContinueWith(task => task.IsFaulted
+                                    ? $"error producing message: {task.Exception.Message}"
+                                    : $"produced to: {task.Result.TopicPartitionOffset}");
+        }
+
 
         /// <summary>
         /// 
